@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WasteGuardAI Frontend Code Guide</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm; }
+  :root { color: #17221d; --green: #087f5b; --ink: #17221d; --muted: #53635b; --line: #d9e3de; --soft: #eef7f2; --warn: #fff5df; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, serif; line-height: 1.45; color: var(--ink); margin: 0; }
+  h1, h2, h3 { font-family: Arial, sans-serif; line-height: 1.15; color: var(--green); page-break-after: avoid; }
+  h1 { font-size: 32px; margin: 0 0 10px; }
+  h2 { font-size: 21px; border-bottom: 2px solid var(--green); padding-bottom: 5px; margin-top: 28px; }
+  h3 { font-size: 15px; margin: 18px 0 4px; }
+  p { margin: 6px 0 10px; }
+  code { font-family: Consolas, monospace; font-size: .9em; background: #f1f4f2; padding: 1px 4px; border-radius: 3px; }
+  .cover { min-height: 235mm; display: flex; flex-direction: column; justify-content: center; border-left: 8px solid var(--green); padding-left: 25px; page-break-after: always; }
+  .kicker { font: bold 12px Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: #d35b32; }
+  .subtitle { font-size: 18px; color: var(--muted); max-width: 620px; }
+  .meta { margin-top: 28px; color: var(--muted); font: 13px Arial, sans-serif; }
+  .box { background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 12px 15px; margin: 12px 0; }
+  .warning { background: var(--warn); border-color: #e8c875; }
+  .flow { font-family: Consolas, monospace; background: #17221d; color: #e9f6ef; padding: 14px; border-radius: 5px; white-space: pre-wrap; }
+  .file { page-break-inside: avoid; margin: 12px 0 16px; }
+  .path { font: bold 14px Consolas, monospace; color: #b44827; }
+  .label { font: bold 12px Arial, sans-serif; text-transform: uppercase; color: var(--muted); }
+  ul { margin-top: 5px; }
+  li { margin: 3px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; margin: 10px 0; }
+  th, td { border: 1px solid var(--line); padding: 6px; vertical-align: top; text-align: left; }
+  th { background: var(--soft); font-family: Arial, sans-serif; }
+  .page-break { page-break-before: always; }
+  footer { font: 10px Arial, sans-serif; color: var(--muted); margin-top: 20px; }
+</style>
+</head>
+<body>
+<section class="cover">
+  <div class="kicker">WasteGuardAI / Frontend</div>
+  <h1>Code Guide</h1>
+  <p class="subtitle">A file-by-file explanation of the React and Vite application: what each module does, how data moves through the system, and where the current implementation deserves attention.</p>
+  <p class="meta">Prepared 27 September 2026<br>Scope: <code>frontend/</code>, including source, configuration, public assets, and project documentation.</p>
+</section>
+
+<h2>1. What This Application Is</h2>
+<p>WasteGuardAI is a React 18 single-page application built with Vite. It supports account creation and login, citizen waste-dumping reports, browser-camera capture, AI frame analysis through a backend API, evidence uploads to Firebase Storage, incident records in Firestore, and authority review through a map and table dashboard.</p>
+<div class="flow">Browser entry: index.html
+  -> src/main.jsx
+  -> src/App.jsx
+  -> routes/index.jsx + AuthProvider
+  -> public pages (/login, /register)
+  -> protected layout (Navbar + page outlet + Footer)
+  -> Dashboard, Report, or Admin workflows
+
+Report data: camera -> AI API -> image upload -> Firestore incident
+Admin data: Firestore incidents -> map/table -> status and notes update</div>
+
+<h2>2. Root Files and Project Metadata</h2>
+<div class="file"><div class="path">frontend/index.html</div><p><span class="label">Role:</span> Vite's HTML shell. It defines the document language, viewport metadata, theme color, page title, and the <code>#root</code> element where React mounts. It contains no React exports. The available favicon in <code>public/</code> is not linked here.</p></div>
+<div class="file"><div class="path">frontend/package.json</div><p><span class="label">Role:</span> Declares the project and its commands. <code>npm run dev</code> starts Vite, <code>npm run build</code> creates the production bundle, and <code>npm run preview</code> serves that bundle. Runtime dependencies are Firebase, Leaflet, React, React DOM, and React Router; development dependencies are Vite and the React plugin. There are no test, lint, typecheck, or format scripts.</p></div>
+<div class="file"><div class="path">frontend/package-lock.json</div><p><span class="label">Role:</span> npm lockfile v3. It records the exact dependency tree, versions, integrity hashes, and resolved registry URLs so installs are reproducible. It is generated metadata, not application behavior; it should normally be changed by npm rather than edited manually.</p></div>
+<div class="file"><div class="path">frontend/vite.config.js</div><p><span class="label">Role:</span> Exports Vite configuration with the React plugin and an <code>/api</code> development proxy aimed at the FastAPI backend. It reads <code>process.env.VITE_BACKEND_URL</code>. A possible configuration mismatch remains: Vite config files generally need <code>loadEnv</code> for project <code>.env</code> values to be available reliably.</p></div>
+<div class="file"><div class="path">frontend/README.md</div><p><span class="label">Role:</span> Human setup and architecture documentation. It describes routes, layout, Firebase variables, build commands, and the intended AI/Firebase flow. Its environment-variable guidance does not fully match the current hardcoded Firebase implementation.</p></div>
+<div class="file"><div class="path">frontend/.env.example</div><p><span class="label">Role:</span> Configuration template naming Firebase and backend settings with the expected <code>VITE_</code> prefix. It documents the intended deployment contract.</p></div>
+<div class="file"><div class="path">frontend/.env</div><p><span class="label">Role:</span> Local configuration file present in the workspace. Its keys are not prefixed as expected and the current Firebase service does not consume them. It should not be committed if it contains environment-specific values.</p></div>
+<div class="file"><div class="path">frontend/public/favicon.svg</div><p><span class="label">Role:</span> Emerald SVG recycling-symbol favicon. Vite serves it as a public asset, but <code>index.html</code> currently does not reference it.</p></div>
+
+<h2>3. Entry Point, Routing, Context, and Pages</h2>
+<div class="file"><div class="path">src/main.jsx</div><p>Imports the global stylesheet and mounts <code>&lt;App /&gt;</code> into the root element inside React <code>StrictMode</code>. Strict Mode helps expose unsafe side effects during development.</p></div>
+<div class="file"><div class="path">src/App.jsx</div><p>Default-exports the top-level <code>App</code> component. Its job is intentionally small: render <code>AppRoutes</code>.</p></div>
+<div class="file"><div class="path">src/routes/index.jsx</div><p>Builds the React Router tree. Public routes are <code>/login</code> and <code>/register</code>; authenticated routes are <code>/dashboard</code> and <code>/report</code>; authority-only routes are under <code>/admin</code>. Unknown URLs redirect to <code>/dashboard</code>. The router is wrapped by <code>AuthProvider</code>.</p></div>
+<div class="file"><div class="path">src/context/AuthContext.jsx</div><p>Defines the React context and exports <code>AuthProvider</code> and <code>useAuth</code>. It makes <code>user</code>, the Firestore <code>profile</code>, and <code>loading</code> available to the component tree.</p></div>
+<div class="file"><div class="path">src/pages/AppLayout.jsx</div><p>Shared authenticated layout. It renders the <code>Navbar</code>, the route's nested <code>Outlet</code>, and the <code>Footer</code>.</p></div>
+<div class="file"><div class="path">src/pages/LoginPage.jsx</div><p>Page wrapper that redirects already-authenticated users and otherwise renders <code>Login</code>. It currently redirects an existing authority to <code>/dashboard</code>, while the login form itself routes authorities to <code>/admin</code>; that is inconsistent behavior.</p></div>
+<div class="file"><div class="path">src/pages/RegisterPage.jsx</div><p>Redirects authenticated users to the dashboard and renders <code>Register</code> for signed-out users.</p></div>
+<div class="file"><div class="path">src/pages/DashboardPage.jsx</div><p>Thin page wrapper exporting the dashboard component.</p></div>
+<div class="file"><div class="path">src/pages/ReportPage.jsx</div><p>Coordinates the report workflow. It starts and stops the camera, begins and ends an AI session, captures frames repeatedly, sends base64 JPEGs for analysis, tracks detection state, uploads evidence, and passes final report state to <code>ReportForm</code>. Cleanup and dependency stability need attention: camera object identity can restart the effect, timers are not explicitly tracked, backend sessions may outlive unmount, and captured object URLs are not revoked.</p></div>
+<div class="file"><div class="path">src/pages/AdminDashboardPage.jsx</div><p>Loads all incidents, switches between overview/map/table and selected incident details, and applies status or notes updates to local state after review.</p></div>
+
+<h2>4. Hooks and Services</h2>
+<div class="file"><div class="path">src/hooks/useAuth.js</div><p>Subscribes to Firebase Auth state and loads <code>users/{uid}</code> from Firestore. It returns <code>{ user, profile, loading }</code>. Error handling is limited, so authentication or profile failures are not represented as a dedicated UI state.</p></div>
+<div class="file"><div class="path">src/hooks/useCamera.js</div><p>Owns camera state and exposes <code>start</code>, <code>stop</code>, and <code>captureFrame</code>. <code>getUserMedia</code> supplies a stream; a canvas converts the current video frame into a JPEG blob and object URL. Callers should revoke those URLs after use.</p></div>
+<div class="file"><div class="path">src/services/firebase.js</div><p>Initializes Firebase and exports <code>auth</code>, <code>db</code>, <code>storage</code>, <code>analytics</code>, and the app. Configuration is hardcoded even though the README and environment template describe environment-driven configuration.</p></div>
+<div class="file"><div class="path">src/services/authService.js</div><p>Exports registration, login, logout, auth observation, and profile lookup. Registration creates Firebase credentials, updates the display name, and writes a default <code>user</code> role profile in Firestore.</p></div>
+<div class="file"><div class="path">src/services/firestoreService.js</div><p>Exports incident creation, list, single-record lookup, and updates; it re-exports profile lookup as <code>getProfile</code>. It uses Firestore timestamps and can filter by reporter. Combining a reporter filter with descending creation ordering may require a composite Firestore index.</p></div>
+<div class="file"><div class="path">src/services/storageService.js</div><p>Exports <code>uploadEvidence</code>. It stores a Blob, File, or byte array under <code>evidence/{userId}/{fileName}</code> and returns a Firebase download URL.</p></div>
+<div class="file"><div class="path">src/services/aiService.js</div><p>Exports session start/stop, frame analysis, and evidence capture helpers. Requests use <code>VITE_BACKEND_URL</code> when present and otherwise <code>/api</code>. <code>captureEvidence</code> is currently unused.</p></div>
+
+<h2>5. Authentication Components</h2>
+<div class="file"><div class="path">src/components/auth/Login.jsx</div><p>Renders the login form, calls Firebase login, retrieves the user's profile, and sends authorities to <code>/admin</code>; other users go to <code>/dashboard</code>.</p></div>
+<div class="file"><div class="path">src/components/auth/Register.jsx</div><p>Renders registration fields, validates required values and minimum password length, calls <code>registerUser</code>, then navigates after success.</p></div>
+<div class="file"><div class="path">src/components/auth/ProtectedRoute.jsx</div><p>Authentication and role guard. It shows loading, redirects signed-out users to login, and sends users without the required role to their permitted home. This is only a client-side guard; Firebase Security Rules and backend authorization must enforce the same boundary.</p></div>
+
+<h2>6. Common and Dashboard Components</h2>
+<div class="file"><div class="path">src/components/common/Button.jsx</div><p>Reusable button with <code>primary</code>, <code>ghost</code>, <code>danger</code>, and <code>outline</code> variants.</p></div>
+<div class="file"><div class="path">src/components/common/Loading.jsx</div><p>Accessible status-region loading indicator with a configurable label.</p></div>
+<div class="file"><div class="path">src/components/common/Navbar.jsx</div><p>Authenticated navigation bar with brand link, current email, logout control, and route links.</p></div>
+<div class="file"><div class="path">src/components/common/Footer.jsx</div><p>Informational application footer.</p></div>
+<div class="file"><div class="path">src/components/common/Sidebar.jsx</div><p>Configurable <code>NavLink</code>-based sidebar. It has styling support but is not imported by the current layout, so it appears unused.</p></div>
+<div class="file"><div class="path">src/components/dashboard/Dashboard.jsx</div><p>Fetches incidents filtered to the current user and renders a welcome area plus recent reports. It logs load failures rather than presenting a dedicated error state.</p></div>
+<div class="file"><div class="path">src/components/dashboard/RecentReports.jsx</div><p>Renders a report grid or an empty state.</p></div>
+<div class="file"><div class="path">src/components/dashboard/ReportCard.jsx</div><p>Displays an incident thumbnail, title, Firestore date, coordinates, and status badge.</p></div>
+
+<h2>7. Camera and Reporting Components</h2>
+<div class="file"><div class="path">src/components/camera/CameraView.jsx</div><p>Video preview component. It assigns the active <code>MediaStream</code> to <code>video.srcObject</code>.</p></div>
+<div class="file"><div class="path">src/components/camera/CaptureButton.jsx</div><p>Button that calls <code>captureFrame</code> and forwards the resulting image to <code>onCapture</code>.</p></div>
+<div class="file"><div class="path">src/components/camera/DetectionStatus.jsx</div><p>Maps <code>idle</code>, <code>detecting</code>, and <code>suspect</code> states to visible status UI. Unknown values fall back to idle.</p></div>
+<div class="file"><div class="path">src/components/reporting/ReportForm.jsx</div><p>Collects title and report details, validates title/location, shows uploaded evidence URLs, invokes the map location picker, and writes the incident to Firestore.</p></div>
+<div class="file"><div class="path">src/components/reporting/ImagePreview.jsx</div><p>Small image thumbnail component for evidence preview.</p></div>
+<div class="file"><div class="path">src/components/reporting/LocationPicker.jsx</div><p>Leaflet/OpenStreetMap map that accepts clicks and browser GPS coordinates. It starts around Metro Manila. Its initialization intentionally captures the initial <code>onChange</code> callback and suppresses exhaustive dependency guidance.</p></div>
+
+<h2>8. Authority and Map Components</h2>
+<div class="file"><div class="path">src/components/admin/AdminDashboard.jsx</div><p>Authority overview showing total, pending, verified, and resolved counts plus the incident table. It can fetch incidents independently, although the current page passes them in.</p></div>
+<div class="file"><div class="path">src/components/admin/IncidentTable.jsx</div><p>Clickable table of incidents with reporter, coordinates, date, and status.</p></div>
+<div class="file"><div class="path">src/components/admin/IncidentDetails.jsx</div><p>Authority review form showing evidence and AI JSON, then updating status and notes in Firestore. The badge reads <code>incident.status</code>, so it can remain visually stale while a new unsaved status is selected.</p></div>
+<div class="file"><div class="path">src/components/admin/StatusBadge.jsx</div><p>Maps <code>pending</code>, <code>verified</code>, and <code>resolved</code> to labels and style classes.</p></div>
+<div class="file"><div class="path">src/components/map/IncidentMap.jsx</div><p>Creates Leaflet markers and popups for incidents with valid coordinates. Marker assets come from unpkg. Popup HTML is assembled directly from incident title and status, so unescaped attacker-controlled values could create an XSS vulnerability.</p></div>
+
+<h2>9. Styling</h2>
+<div class="file"><div class="path">src/index.css</div><p>Global stylesheet for the emerald visual theme and all major surfaces: buttons, panels, auth forms, dashboard cards, camera UI, maps, tables, badges, loading animation, and responsive layouts. It also includes selectors for the unused sidebar. It is imported once by <code>main.jsx</code>, so the classes are globally available.</p></div>
+
+<h2>10. Current Risks and Suggested Priorities</h2>
+<div class="box warning"><ol>
+<li>Move Firebase configuration to validated environment variables and align <code>.env.example</code>, <code>.env</code>, README, and the implementation.</li>
+<li>Escape popup content or use Leaflet DOM APIs in <code>IncidentMap.jsx</code>.</li>
+<li>Make camera detection effect dependencies stable, retain timer IDs, stop backend sessions on cleanup, and revoke object URLs.</li>
+<li>Enforce authority permissions in Firebase Security Rules and the backend, not just in React.</li>
+<li>Add visible error states for dashboard and admin data loads.</li>
+<li>Resolve the authority redirect inconsistency between <code>LoginPage</code> and <code>Login</code>.</li>
+<li>Add tests and lint/type checks; the current project has none.</li>
+</ol></div>
+
+<h2>11. How to Run and Verify</h2>
+<table><tr><th>Command</th><th>Purpose</th></tr>
+<tr><td><code>npm install</code></td><td>Install the lockfile-pinned dependency tree.</td></tr>
+<tr><td><code>npm run dev</code></td><td>Start the Vite development server for interactive checks.</td></tr>
+<tr><td><code>npm run build</code></td><td>Compile the production bundle and catch build-time errors.</td></tr>
+<tr><td><code>npm run preview</code></td><td>Serve the production bundle locally.</td></tr></table>
+<p>There is no automated test or lint command in the current project. A full runtime check also needs Firebase configuration, browser camera permission, a working backend API, and valid Firestore/Storage rules.</p>
+<footer>WasteGuardAI Frontend Code Guide · Generated from the workspace source inventory</footer>
+</body>
+</html>
