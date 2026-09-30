@@ -10,6 +10,7 @@ export default function LocationPicker({ value, onChange }) {
   const mapRef = useRef(null)
   const markerRef = useRef(null)
   const [gpsBusy, setGpsBusy] = useState(false)
+  const [gpsError, setGpsError] = useState('')
 
   // Initialise the map once.
   useEffect(() => {
@@ -38,12 +39,13 @@ export default function LocationPicker({ value, onChange }) {
     markerRef.current = L.marker([loc.lat, loc.lng]).addTo(map)
   }
 
-  async function useGps() {
+  function enableLocation() {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by this browser.')
+      setGpsError('Location is not supported by this browser.')
       return
     }
     setGpsBusy(true)
+    setGpsError('')
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
@@ -53,9 +55,12 @@ export default function LocationPicker({ value, onChange }) {
         }
         onChange?.(loc)
         setGpsBusy(false)
-      },
-      () => {
-        alert('Could not get your location. Click on the map instead.')
+      }, (error) => {
+        setGpsError(
+          error.code === error.PERMISSION_DENIED
+            ? 'Location access was denied. Allow it in your browser settings and try again.'
+            : 'Could not get your location. Check your device settings or click on the map.'
+        )
         setGpsBusy(false)
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -65,8 +70,8 @@ export default function LocationPicker({ value, onChange }) {
   return (
     <div className="location-picker">
       <div className="location-picker__toolbar">
-        <button type="button" className="btn btn--outline" onClick={useGps} disabled={gpsBusy}>
-          {gpsBusy ? 'Locating…' : '📍 Use my GPS location'}
+        <button type="button" className="btn btn--outline" onClick={enableLocation} disabled={gpsBusy}>
+          {gpsBusy ? 'Getting location…' : 'Enable live location'}
         </button>
         {value && (
           <span className="location-picker__coords">
@@ -74,6 +79,7 @@ export default function LocationPicker({ value, onChange }) {
           </span>
         )}
       </div>
+      {gpsError && <p className="form-error">{gpsError}</p>}
       <div ref={mapElRef} className="location-picker__map" />
     </div>
   )

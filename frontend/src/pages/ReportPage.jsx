@@ -12,6 +12,7 @@ import CameraView from '../components/camera/CameraView'
 import DetectionStatus from '../components/camera/DetectionStatus'
 import CaptureButton from '../components/camera/CaptureButton'
 import ReportForm from '../components/reporting/ReportForm'
+import LocationPicker from '../components/reporting/LocationPicker'
 import Button from '../components/common/Button'
 import {
   startSession,
@@ -129,14 +130,17 @@ export default function ReportPage() {
           )}
         </div>
         {camera.error && <p className="form-error">{camera.error}</p>}
+        <div className="field">
+          <span>Incident location</span>
+          <LocationPicker value={location} onChange={setLocation} />
+        </div>
       </section>
 
       <section className="panel">
         <div className="panel__header">
           <h2>Submit report</h2>
         </div>
-        {/* Location captured by the form's map; evidence URLs passed along. */}
-        <ReportForm initialLocation={location} onLocation={setLocation} evidenceImages={evidenceUrls} />
+        <ReportForm location={location} evidenceImages={evidenceUrls} />
       </section>
     </div>
   )

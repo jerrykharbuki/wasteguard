@@ -1,4 +1,4 @@
-// RegisterPage — renders the registration form in a centered layout.
+// RegisterPage — public page showing the registration form (centered).
 
 import { Navigate } from 'react-router-dom'
 import Register from '../components/auth/Register'

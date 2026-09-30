@@ -12,7 +12,8 @@ export default function Navbar() {
 
   async function handleLogout() {
     await logoutUser()
-    navigate('/login')
+    // No login page in demo mode — go back to the dashboard.
+    navigate('/dashboard')
   }
 
   return (

@@ -1,22 +1,38 @@
 // routes/index.jsx — all React Router routes.
-// Public: /login, /register
-// Protected (signed-in): /dashboard, /report
-// Authority-only: /admin
+//
+// User area (requires sign-in):
+//   /dashboard, /report        (wrapped in AppLayout)
+//
+// Authority/admin area (requires role === 'authority'):
+//   /admin                     (admin dashboard)
+//   /admin/reports             (reports management)
+//   /admin/reports/:id         (single report details)
+//   (all wrapped in AdminLayout with a sidebar + <Outlet />)
+//
+// Regular users are NOT allowed into /admin; ProtectedRoute redirects them.
 
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
-import { AuthProvider } from '../context/AuthContext'
+import { AuthProvider, useAuth } from '../context/AuthContext'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
+import Loading from '../components/common/Loading'
 
 import AppLayout from '../pages/AppLayout'
-import LoginPage from '../pages/LoginPage'
-import RegisterPage from '../pages/RegisterPage'
 import DashboardPage from '../pages/DashboardPage'
 import ReportPage from '../pages/ReportPage'
-import AdminDashboardPage from '../pages/AdminDashboardPage'
+
+import AdminLayout from '../pages/AdminLayout'
+import AdminDashboard from '../components/admin/AdminDashboard'
+import AdminReports from '../pages/AdminReports'
+import AdminReportDetails from '../pages/AdminReportDetails'
+
+// Redirect "/" to the user's home depending on role.
+function HomeRedirect() {
+  const { profile, loading } = useAuth()
+  if (loading) return <Loading label="Loading…" />
+  return <Navigate to={profile?.role === 'authority' ? '/admin' : '/dashboard'} replace />
+}
 
 const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
-  { path: '/register', element: <RegisterPage /> },
   {
     path: '/',
     element: (
@@ -25,7 +41,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { index: true, element: <HomeRedirect /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'report', element: <ReportPage /> },
     ],
@@ -34,10 +50,14 @@ const router = createBrowserRouter([
     path: '/admin',
     element: (
       <ProtectedRoute requiredRole="authority">
-        <AppLayout />
+        <AdminLayout />
       </ProtectedRoute>
     ),
-    children: [{ index: true, element: <AdminDashboardPage /> }],
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: 'reports', element: <AdminReports /> },
+      { path: 'reports/:id', element: <AdminReportDetails /> },
+    ],
   },
   { path: '*', element: <Navigate to="/dashboard" replace /> },
 ])

@@ -1,5 +1,6 @@
 // Login — email/password login form card.
-// Uses authService.loginUser then routes by saved location.
+// Uses authService.loginUser then routes by role: authorities go to
+// /admin, regular users go to their saved location or /dashboard.
 
 import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
@@ -23,7 +24,7 @@ export default function Login() {
     setBusy(true)
     try {
       const cred = await loginUser({ email, password })
-      // Route authorities to the admin dashboard.
+      // Route authorities to the admin dashboard; others to their page.
       const profile = await getUserProfile(cred.user.uid)
       navigate(profile?.role === 'authority' ? '/admin' : from, { replace: true })
     } catch (err) {

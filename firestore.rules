@@ -1,0 +1,53 @@
+rules_version = '2';
+
+// Suggested Firestore security rules for WasteGuard AI.
+// Apply these in the Firebase console (Firestore Database > Rules).
+//
+// Concept:
+//   - Anyone signed in can READ/WRITE their OWN user document.
+//   - Only the reporter who created an incident can create it, and any
+//     signed-in user can read reports.
+//   - ONLY users whose profile has role == 'authority' can UPDATE reports
+//     (change status) — this protects against regular users tampering.
+//
+// NOTE: The React route guard stops regular users in the UI, but the real
+// enforcement happens HERE in the database. Deployment-grade apps must
+// rely on these rules, not just hiding buttons.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Manage the helper function to detect authorities.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAuthority() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'authority';
+    }
+
+    // users/{uid} — each user manages their own profile.
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // incidents/{id} — reports submitted by users.
+    match /incidents/{id} {
+      // Anyone signed in can read reports (needed by both apps).
+      allow read: if isSignedIn();
+
+      // A signed-in user can create a report (must set themselves as reporter).
+      allow create: if isSignedIn()
+        && request.resource.data.reportedBy == request.auth.uid
+        && request.resource.data.status == 'pending';
+
+      // Only authorities can update a report (change status / add notes).
+      allow update: if isAuthority();
+
+      // In this demo, no one deletes reports.
+      allow delete: if false;
+    }
+  }
+}

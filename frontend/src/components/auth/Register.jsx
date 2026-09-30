@@ -1,5 +1,6 @@
 // Register — create a user account.
-// Calls authService.registerUser which also creates a Firestore profile.
+// Calls authService.registerUser which also creates a Firestore profile
+// with role 'user'.
 
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'

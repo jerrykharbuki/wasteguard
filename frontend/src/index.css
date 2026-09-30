@@ -166,6 +166,11 @@ h1, h2, h3 {
   border-color: var(--emerald);
   color: var(--emerald-600);
 }
+.btn--sm {
+  padding: 5px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+}
 
 /* ---------------- Panels / cards ---------------- */
 .panel {
@@ -356,6 +361,10 @@ h1, h2, h3 {
   background: var(--emerald-50);
   color: var(--emerald-600);
 }
+.status--rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
 
 /* ---------------- Camera ---------------- */
 .camera-view {
@@ -512,6 +521,9 @@ h1, h2, h3 {
 .stat-card--resolved .stat-card__value {
   color: var(--green);
 }
+.stat-card--rejected .stat-card__value {
+  color: var(--danger);
+}
 
 .table-wrap {
   overflow-x: auto;
@@ -563,6 +575,180 @@ h1, h2, h3 {
   border-radius: 10px;
   font-size: 13px;
   overflow-x: auto;
+}
+
+/* ---------------- Admin layout (sidebar + main) ---------------- */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #0f172a;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.admin-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+.admin-sidebar__brand strong {
+  color: #fff;
+  line-height: 1.1;
+}
+.admin-sidebar__role {
+  display: block;
+  font-size: 12px;
+  color: var(--emerald);
+  margin-top: 2px;
+}
+.admin-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.admin-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 15px;
+  transition: background 0.2s, color 0.2s;
+}
+.admin-sidebar__link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+}
+.admin-sidebar__link--active {
+  background: var(--emerald);
+  color: #fff;
+}
+.admin-sidebar__link--active:hover {
+  background: var(--emerald);
+}
+.admin-sidebar__footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 14px;
+}
+.admin-sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 10px;
+}
+.admin-sidebar__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--emerald);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+.admin-sidebar__user-meta {
+  line-height: 1.2;
+}
+.admin-sidebar__user-meta strong {
+  display: block;
+  color: #fff;
+  font-size: 13px;
+}
+.admin-sidebar__user-meta span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.admin-sidebar__logout {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fca5a5;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+}
+.admin-sidebar__logout:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.admin-main {
+  flex: 1;
+  padding: 28px 32px;
+  background: var(--bg);
+  min-width: 0;
+}
+
+.admin-dashboard__header {
+  margin-bottom: 18px;
+}
+.admin-dashboard__header h1 {
+  font-size: 26px;
+}
+
+/* Report detail action grid */
+.report-detail__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.report-detail__value {
+  padding: 8px 0;
+  font-weight: 500;
+}
+.report-detail__actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .admin-sidebar__nav {
+    flex-direction: row;
+    flex: 1;
+  }
+  .admin-sidebar__footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: none;
+    padding-top: 0;
+  }
+  .admin-main {
+    padding: 20px 16px;
+  }
+  .report-detail__actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------------- Responsive tweaks ---------------- */

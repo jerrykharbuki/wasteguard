@@ -1,25 +1,27 @@
-// AdminDashboard — authority's overview: stats + full incident table.
+// AdminDashboard — the default/admin dashboard at /admin.
+// Shows summary statistics for authorities: total, pending, resolved,
+// and rejected reports. Includes quick links to the reports page.
 
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getIncidents } from '../../services/firestoreService'
-import IncidentTable from './IncidentTable'
 import Loading from '../common/Loading'
 
-export default function AdminDashboard({ incidents: propIncidents, onSelect }) {
-  // If incidents are passed from the parent page, use them; otherwise fetch.
-  const [localIncidents, setLocalIncidents] = useState([])
-  const [loading, setLoading] = useState(!propIncidents)
-  const incidents = propIncidents || localIncidents
+const STATUS_VALUES = ['pending', 'resolved', 'rejected']
+
+export default function AdminDashboard() {
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (propIncidents) return
     let active = true
     async function load() {
       try {
-        const data = await getIncidents() // authorities see everything
-        if (active) setLocalIncidents(data)
+        // Authorities see every submitted report.
+        const data = await getIncidents()
+        if (active) setReports(data)
       } catch (err) {
-        console.error('Failed to load incidents:', err)
+        console.error('Failed to load reports:', err)
       } finally {
         if (active) setLoading(false)
       }
@@ -28,36 +30,50 @@ export default function AdminDashboard({ incidents: propIncidents, onSelect }) {
     return () => {
       active = false
     }
-  }, [propIncidents])
+  }, [])
 
   const stats = {
-    total: incidents.length,
-    pending: incidents.filter((i) => i.status === 'pending').length,
-    verified: incidents.filter((i) => i.status === 'verified').length,
-    resolved: incidents.filter((i) => i.status === 'resolved').length,
+    total: reports.length,
+    pending: reports.filter((r) => r.status === 'pending').length,
+    resolved: reports.filter((r) => r.status === 'resolved').length,
+    rejected: reports.filter((r) => r.status === 'rejected').length,
   }
 
   return (
-    <div className="admin">
-      <section className="stats-row">
-        <StatCard label="Total incidents" value={stats.total} />
-        <StatCard label="Pending review" value={stats.pending} tone="pending" />
-        <StatCard label="Verified" value={stats.verified} tone="verified" />
-        <StatCard label="Resolved" value={stats.resolved} tone="resolved" />
-      </section>
+    <div className="admin-dashboard">
+      <header className="admin-dashboard__header">
+        <h1>Dashboard</h1>
+        <p className="muted">Overview of all submitted reports.</p>
+      </header>
+
+      {loading ? (
+        <Loading label="Loading statistics…" />
+      ) : (
+        <section className="stats-row">
+          <StatCard label="Total reports" value={stats.total} />
+          <StatCard label="Pending" value={stats.pending} tone="pending" />
+          <StatCard label="Resolved" value={stats.resolved} tone="resolved" />
+          <StatCard label="Rejected" value={stats.rejected} tone="rejected" />
+        </section>
+      )}
 
       <section className="panel">
         <div className="panel__header">
-          <h2>All incidents</h2>
-          <p className="muted">AI detections are suspected only — review the
-          evidence before any action.</p>
+          <h2>Reports quick actions</h2>
         </div>
-        {loading ? (
-          <Loading />
-        ) : (
-          <IncidentTable incidents={incidents} onSelect={onSelect} />
-        )}
+        <p className="muted">
+          Review user submissions, verify evidence, and update report status.
+        </p>
+        <Link to="/admin/reports" className="btn btn--primary" style={{ marginTop: 12 }}>
+          View all reports →
+        </Link>
       </section>
+
+      {!loading && STATUS_VALUES.every((s) => stats[s] === 0) && stats.total === 0 && (
+        <p className="muted" style={{ padding: '8px 4px' }}>
+          No reports submitted yet.
+        </p>
+      )}
     </div>
   )
 }
